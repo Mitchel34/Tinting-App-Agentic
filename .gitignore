@@ -1,0 +1,60 @@
+\
+# General
+.DS_Store
+.AppleDouble
+.LSOverride
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Node
+node_modules/
+dist/
+build/
+coverage/
+*.pem
+
+# Local Environment Variables
+.env
+.env*.local
+!.env.example
+!.env.sample
+
+# Next.js (inside tinting-app)
+tinting-app/.next/
+tinting-app/out/
+tinting-app/build/
+tinting-app/node_modules/
+
+# Firebase Functions (inside tinting-app/functions)
+tinting-app/functions/node_modules/
+# If you have a .runtimeconfig.json for local Firebase Functions testing, you might want to ignore it
+# tinting-app/functions/.runtimeconfig.json
+
+# Editor directories and files
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.sublime-workspace
+
+# Optional: Reports
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+pid.[0-9]*.json
+snapshot.[0-9]*.json
+timeline.[0-9]*.json
+report.html
