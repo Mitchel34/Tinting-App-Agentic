@@ -25,15 +25,22 @@ const services: Service[] = [
     id: 'service_std',
     name: 'Standard Tint',
     price: 200,
-    priceId: 'YOUR_STANDARD_TINT_PRICE_ID_FROM_STRIPE', // REPLACE with your actual Stripe Price ID for Standard Tint
+    priceId: 'price_1RNZcjRxuNSjjGtneUPuk9vK', // REPLACE with your actual Stripe Price ID for Standard Tint
     description: 'Basic tinting for all windows.',
   },
   {
     id: 'service_prm',
     name: 'Premium Tint',
     price: 350,
-    priceId: 'YOUR_PREMIUM_TINT_PRICE_ID_FROM_STRIPE', // REPLACE with your actual Stripe Price ID for Premium Tint
+    priceId: 'price_1RNZdfRxuNSjjGtn0Da6RlVb', // REPLACE with your actual Stripe Price ID for Premium Tint
     description: 'High-quality ceramic tint for maximum heat rejection and UV protection.',
+  },
+  {
+    id: 'service_prm_plus',
+    name: 'Premium Plus Tint',
+    price: 500, // Assuming a price for Premium Plus, adjust as needed
+    priceId: 'price_1RNZdrRxuNSjjGtnaXI2GxCH',
+    description: 'Our best tint with superior clarity, heat rejection, and UV blocking capabilities.',
   },
 ];
 
