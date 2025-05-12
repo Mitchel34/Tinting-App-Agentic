@@ -1,5 +1,4 @@
 import * as admin from "firebase-admin";
-// Fix SendGrid import
 import sgMail from "@sendgrid/mail";
 import Stripe from "stripe";
 import * as functions from "firebase-functions";
@@ -40,9 +39,10 @@ const db = admin.firestore();
 // --- Firebase Function: Send Welcome Email ---
 export const sendwelcomeemail = functions.auth.user().onCreate(async (user) => {
   if (!user.email) {
-    console.log("User has no email, skipping welcome email");
+    console.log("User does not have an email address. Skipping welcome email.", { uid: user.uid });
     return;
   }
+
   const msg = {
     to: user.email,
     from: "tinting-app@proton.me",
@@ -115,100 +115,97 @@ export const createstripecheckoutsession = functions.https.onCall(async (data: C
     return { sessionId: session.id };
   } catch (error: any) {
     console.error("Error creating Stripe checkout session:", { uid: userId, errorMessage: error.message, errorDetails: error });
-    throw new functions.https.HttpsError(
-      "internal",
-      "Could not create Stripe checkout session."
-    );
+    throw new functions.https.HttpsError("internal", "Error creating checkout session.");
   }
 });
 
-// --- Firebase Function: Handle Stripe Webhooks ---
+// --- Firebase Function: Handle Stripe Webhook ---
 export const stripewebhook = functions.https.onRequest(async (req: FirebaseFunctionsRequest, res: Response) => {
-  const signature = req.headers["stripe-signature"] as string;
+  const sig = req.headers['stripe-signature'];
+
+  if (!sig) {
+    console.error("No Stripe signature found in webhook request");
+    return res.status(400).send("No Stripe signature found");
+  }
 
   if (!stripeWebhookSecret) {
-    console.error("Stripe webhook secret is not configured. Ensure STRIPE_WEBHOOK_SECRET is set in Firebase config.");
-    res.status(500).send("Webhook Error: Server configuration error - webhook secret not set.");
-    return;
+    console.error("Stripe webhook secret is not set. Cannot verify webhook signatures.");
+    return res.status(500).send("Webhook secret not configured");
   }
 
-  let event: Stripe.Event;
+  let event;
 
   try {
-    // Now TypeScript knows req.rawBody exists
-    event = stripe.webhooks.constructEvent(req.rawBody, signature, stripeWebhookSecret);
+    event = stripe.webhooks.constructEvent(req.rawBody, sig, stripeWebhookSecret);
   } catch (err: any) {
-    console.error("⚠️ Webhook signature verification failed.", { errorMessage: err.message });
-    res.status(400).send(`Webhook Error: ${err.message}`);
-    return;
+    console.error("Error verifying webhook signature:", { errorMessage: err.message, errorDetails: err });
+    return res.status(400).send(`Webhook signature verification failed: ${err.message}`);
   }
 
-  console.log("Received Stripe event:", { type: event.type, id: event.id });
+  console.log("Received Stripe webhook event:", { eventType: event.type, eventId: event.id });
 
+  // Handle specific event types
   switch (event.type) {
-    case "checkout.session.completed":
-      const session = event.data.object as Stripe.Checkout.Session;
-      console.log("Checkout session completed:", { sessionId: session.id, userId: session.client_reference_id });
-
-      const userId = session.client_reference_id;
-      const paymentIntentId = typeof session.payment_intent === 'string' ? session.payment_intent : session.payment_intent?.id;
-      const amountTotal = session.amount_total;
-      const currency = session.currency;
-      const customerEmail = session.customer_details?.email;
-
-      if (!userId || !paymentIntentId || amountTotal === null || amountTotal === undefined) {
-        console.error("Missing required data from Stripe session.", { sessionId: session.id, data: session });
-        res.status(400).send("Webhook Error: Missing data in session.");
-        return;
-      }
-
-      const orderData = {
-        userId,
-        paymentIntentId,
-        sessionId: session.id, // Add the sessionId to help with order lookups
-        amount: amountTotal / 100,
-        currency,
-        status: "paid",
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        customerEmail: customerEmail || "N/A",
-      };
-
+    case 'checkout.session.completed':
+      const session = event.data.object;
+      
       try {
-        const orderRef = await db.collection("orders").add(orderData);
-        console.log(`Order ${orderRef.id} created for user ${userId}`, { orderId: orderRef.id });
+        // Get the user ID from the session metadata
+        const userId = session.metadata?.userId;
 
-        let emailToSendTo = customerEmail;
-        if (!emailToSendTo && userId) {
-          try {
-            const userRecord = await admin.auth().getUser(userId);
-            emailToSendTo = userRecord.email;
-          } catch (authError: any) {
-            console.warn("Could not fetch user email from Auth for order confirmation.", { userId, orderId: orderRef.id, errorMessage: authError.message });
-          }
+        if (!userId) {
+          console.error("No user ID found in session metadata", { sessionId: session.id });
+          break;
         }
 
-        if (emailToSendTo) {
-          const confirmationMsg = {
-            to: emailToSendTo,
-            from: "tinting-app@proton.me",
-            subject: "Your Window Tinting Service Order Confirmation",
-            html: `
-              <h1>Order Confirmed!</h1>
-              <p>Thank you for your purchase.</p>
-              <p>Order ID: ${orderRef.id}</p>
-              <p>Amount Paid: ${orderData.amount} ${currency?.toUpperCase()}</p>
-              <p>We will contact you shortly to schedule your service.</p>
-            `,
-          };
-          await sgMail.send(confirmationMsg);
-          console.log("Confirmation email sent.", { orderId: orderRef.id, email: emailToSendTo });
+        // Create a new order document in Firestore
+        const orderRef = await db.collection('orders').add({
+          userId: userId,
+          amount: session.amount_total,
+          currency: session.currency,
+          status: 'completed',
+          paymentId: session.payment_intent,
+          created: admin.firestore.FieldValue.serverTimestamp(),
+          items: [{
+            // You may want to fetch the product details here or store them in the session metadata
+            priceId: session.line_items?.data[0]?.price?.id || 'unknown',
+            quantity: session.line_items?.data[0]?.quantity || 1,
+          }]
+        });
+
+        console.log("Order created successfully", { orderId: orderRef.id, userId });
+
+        // Send confirmation email to user
+        if (sendgridEnabled) {
+          const userRecord = await admin.auth().getUser(userId);
+          
+          if (userRecord.email) {
+            const msg = {
+              to: userRecord.email,
+              from: 'tinting-app@proton.me',
+              subject: 'Your Order Confirmation',
+              html: `
+                <h1>Thank you for your order!</h1>
+                <p>Your payment has been processed successfully.</p>
+                <p>Order ID: ${orderRef.id}</p>
+                <p>Amount: ${(session.amount_total || 0) / 100} ${session.currency?.toUpperCase() || 'USD'}</p>
+                <p>We'll be in touch shortly to schedule your window tinting service.</p>
+              `,
+            };
+
+            await sgMail.send(msg);
+            console.log("Order confirmation email sent", { orderId: orderRef.id, email: userRecord.email });
+          } else {
+            console.warn("Could not send confirmation email for order", { orderId: orderRef.id, error: "No email found for user" });
+          }
         } else {
-          console.warn(`Could not send confirmation email for order ${orderRef.id}, no email found.`, { orderId: orderRef.id });
+          console.warn("SendGrid is not enabled, skipping order confirmation email");
         }
       } catch (dbError: any) {
         console.error("Error creating order or sending confirmation email:", { errorMessage: dbError.message, errorDetails: dbError });
       }
       break;
+
     default:
       console.log(`Unhandled Stripe event type: ${event.type}`, { eventId: event.id });
   }

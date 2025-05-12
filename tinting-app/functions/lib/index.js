@@ -15,6 +15,7 @@ var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (
 }) : function(o, v) {
     o["default"] = v;
 });
+<<<<<<< HEAD
 var __importStar = (this && this.__importStar) || (function () {
     var ownKeys = function(o) {
         ownKeys = Object.getOwnPropertyNames || function (o) {
@@ -41,14 +42,36 @@ exports.stripewebhook = exports.createstripecheckoutsession = exports.sendwelcom
 const admin = __importStar(require("firebase-admin"));
 // Fix SendGrid import
 const mail_1 = __importDefault(require("@sendgrid/mail"));
+=======
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.stripewebhook = exports.createstripecheckoutsession = exports.sendwelcomeemail = void 0;
+const admin = __importStar(require("firebase-admin"));
+const sgMail = __importStar(require("@sendgrid/mail"));
+>>>>>>> 6caffabceb2b86d681ad6dcdc7936bfce18dd797
 const stripe_1 = __importDefault(require("stripe"));
 const functions = __importStar(require("firebase-functions"));
 // Initialize Firebase Admin SDK
 admin.initializeApp();
 // Environment configuration 
+<<<<<<< HEAD
 const stripeSecretKey = (_a = functions.config().stripe) === null || _a === void 0 ? void 0 : _a.secret_key;
 const sendgridApiKey = (_b = functions.config().sendgrid) === null || _b === void 0 ? void 0 : _b.api_key;
 const stripeWebhookSecret = (_c = functions.config().stripe) === null || _c === void 0 ? void 0 : _c.webhook_secret;
+=======
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY;
+const sendgridApiKey = process.env.SENDGRID_API_KEY;
+const stripeWebhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+>>>>>>> 6caffabceb2b86d681ad6dcdc7936bfce18dd797
 // Initialize Stripe
 if (!stripeSecretKey) {
     console.error("Stripe secret key is not set. Ensure STRIPE_SECRET_KEY is set in Firebase config.");
@@ -59,7 +82,11 @@ if (!sendgridApiKey) {
     console.error("SendGrid API key is not set. Ensure SENDGRID_API_KEY is set in Firebase config.");
 }
 else {
+<<<<<<< HEAD
     mail_1.default.setApiKey(sendgridApiKey);
+=======
+    sgMail.setApiKey(sendgridApiKey);
+>>>>>>> 6caffabceb2b86d681ad6dcdc7936bfce18dd797
 }
 const db = admin.firestore();
 // --- Firebase Function: Send Welcome Email ---
@@ -79,7 +106,11 @@ exports.sendwelcomeemail = functions.auth.user().onCreate(async (user) => {
     `,
     };
     try {
+<<<<<<< HEAD
         await mail_1.default.send(msg);
+=======
+        await sgMail.send(msg);
+>>>>>>> 6caffabceb2b86d681ad6dcdc7936bfce18dd797
         console.log("Welcome email sent to:", user.email, { uid: user.uid });
     }
     catch (error) {
@@ -194,7 +225,11 @@ exports.stripewebhook = functions.https.onRequest(async (req, res) => {
               <p>We will contact you shortly to schedule your service.</p>
             `,
                     };
+<<<<<<< HEAD
                     await mail_1.default.send(confirmationMsg);
+=======
+                    await sgMail.send(confirmationMsg);
+>>>>>>> 6caffabceb2b86d681ad6dcdc7936bfce18dd797
                     console.log("Confirmation email sent.", { orderId: orderRef.id, email: emailToSendTo });
                 }
                 else {
