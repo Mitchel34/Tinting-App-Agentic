@@ -27,6 +27,7 @@ if (!getApps().length) {
 
 const auth = getAuth(app);
 const db = getFirestore(app);
-const functions = getFunctions(app);
+// Update to specify the region where your functions are deployed
+const functions = getFunctions(app, "us-central1");
 
 export { app, auth, db, functions };

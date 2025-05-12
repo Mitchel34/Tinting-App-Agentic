@@ -1,4 +1,3 @@
-\
 # General
 .DS_Store
 .AppleDouble
@@ -18,6 +17,9 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
+firebase-debug.log*
+ui-debug.log*
+firestore-debug.log*
 
 # Node
 node_modules/
@@ -26,24 +28,30 @@ build/
 coverage/
 *.pem
 
-# Local Environment Variables
+# Environment Variables & Secrets
 .env
 .env*.local
 !.env.example
 !.env.sample
+.runtimeconfig.json
+**/serviceAccountKey.json
 
-# Next.js (inside tinting-app)
-tinting-app/.next/
-tinting-app/out/
-tinting-app/build/
-tinting-app/node_modules/
+# Next.js
+.next/
+out/
 
-# Firebase Functions (inside tinting-app/functions)
-tinting-app/functions/node_modules/
-# If you have a .runtimeconfig.json for local Firebase Functions testing, you might want to ignore it
-# tinting-app/functions/.runtimeconfig.json
+# Firebase
+.firebase/
+.firebaserc
+firebase-debug.log
+*-debug.log
 
-# Editor directories and files
+# Firebase Functions - avoid exposing runtime configs
+functions/.runtimeconfig.json
+functions/.env
+functions/.env.local
+
+# IDEs and editors
 .idea/
 .vscode/*
 !.vscode/settings.json
@@ -52,9 +60,20 @@ tinting-app/functions/node_modules/
 !.vscode/extensions.json
 *.sublime-workspace
 
-# Optional: Reports
-report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
-pid.[0-9]*.json
-snapshot.[0-9]*.json
-timeline.[0-9]*.json
-report.html
+# Testing and development
+.vercel
+*.tsbuildinfo
+.eslintcache
+
+# Production build files
+*.tgz
+.cache/
+tmp/
+
+# Stripe CLI
+.stripe/
+stripe.exe
+
+# Dependencies lock files if using npm
+# Uncomment if using yarn or pnpm exclusively
+# package-lock.json
