@@ -125,12 +125,14 @@ export const stripewebhook = functions.https.onRequest(async (req: FirebaseFunct
 
   if (!sig) {
     console.error("No Stripe signature found in webhook request");
-    return res.status(400).send("No Stripe signature found");
+    res.status(400).send("No Stripe signature found");
+    return;
   }
 
   if (!stripeWebhookSecret) {
     console.error("Stripe webhook secret is not set. Cannot verify webhook signatures.");
-    return res.status(500).send("Webhook secret not configured");
+    res.status(500).send("Webhook secret not configured");
+    return;
   }
 
   let event;
@@ -139,7 +141,8 @@ export const stripewebhook = functions.https.onRequest(async (req: FirebaseFunct
     event = stripe.webhooks.constructEvent(req.rawBody, sig, stripeWebhookSecret);
   } catch (err: any) {
     console.error("Error verifying webhook signature:", { errorMessage: err.message, errorDetails: err });
-    return res.status(400).send(`Webhook signature verification failed: ${err.message}`);
+    res.status(400).send(`Webhook signature verification failed: ${err.message}`);
+    return;
   }
 
   console.log("Received Stripe webhook event:", { eventType: event.type, eventId: event.id });

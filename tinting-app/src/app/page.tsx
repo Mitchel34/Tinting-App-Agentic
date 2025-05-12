@@ -122,9 +122,9 @@ export default function ServicesPage() {
         {!user && (
           <div className="mb-8 p-4 bg-blue-100 border-l-4 border-blue-500 text-blue-700">
             <p>
-              Please{' '}
-              <a href="/login" className="font-bold hover:underline">log in</a> or{' '}
-              <a href="/signup" className="font-bold hover:underline">sign up</a>{' '}
+              Please{' '}
+              <a href="/login" className="font-bold hover:underline">log in</a> or{' '}
+              <a href="/signup" className="font-bold hover:underline">sign up</a>{' '}
               to purchase a service.
             </p>
           </div>
@@ -142,7 +142,7 @@ export default function ServicesPage() {
               <div className="p-6">
                 <h2 className="text-2xl font-bold text-gray-800">{service.name}</h2>
                 <p className="mt-2 text-gray-600">{service.description}</p>
-                <p className="mt-4 text-3xl font-semibold text-gray-900">\${service.price}</p>
+                <p className="mt-4 text-3xl font-semibold text-gray-900">${service.price}</p>
                 {user && (
                   <button
                     onClick={() => handlePurchase(service)}
@@ -165,7 +165,7 @@ export default function ServicesPage() {
           ))}
         </div>
 
-        {/* Integrate Chatbot component - remove placeholder div */}
+        {/* Integrate Chatbot component */}
         <Chatbot />
 
       </div>
